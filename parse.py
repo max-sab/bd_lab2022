@@ -40,7 +40,7 @@ def parse_files():
                         if 'rayon' in country_string:
                             location['rayon'] = country_string.split()[3]
                         gene['location'] = location
-                        gene['mark'] = decide_country(country_string)
+                        gene['mark'] = decide_country(country_string.split(':')[0])
                     if 'COMMENT' in line2:
                         while True:
                             line3 = myfile.readline()
