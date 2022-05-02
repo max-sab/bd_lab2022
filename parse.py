@@ -49,5 +49,5 @@ def parse_files():
                             line2 += line3
                         gene['comment'] = " ".join(line2.replace('COMMENT','').replace('\n','').split())
                 genes.append(gene)
-        print(genes)
+        return genes
 
