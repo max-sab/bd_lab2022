@@ -3,7 +3,7 @@
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 import pymongo
-
+from parse import parse_files
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -12,6 +12,7 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    parse_files()
     client = pymongo.MongoClient(
         "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
     db = client['genes']
