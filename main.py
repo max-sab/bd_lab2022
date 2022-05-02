@@ -16,7 +16,6 @@ def combine_results(genes, fasta):
         needed_fasta = fasta[gene["code"]]
         genes[idx] = genes[idx] | needed_fasta
 
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     genes = parse_files()
