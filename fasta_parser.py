@@ -13,7 +13,8 @@ def parse_fasta():
         fasta_sequence = split_fasta[2:]
         final_dict[split_fasta[0]] = {
             "cypher": split_fasta[1],
-            "fasta": fasta_sequence[0].replace("\n", "")
+            "fasta": fasta_sequence[0].replace("\n", ""),
+            "region_cypher" : split_fasta[1][:2].replace("-", "")
         }
 
     return final_dict
