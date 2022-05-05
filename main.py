@@ -7,10 +7,6 @@ from parse import parse_files
 from fasta_parser import parse_fasta
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
 
 def combine_results(genes, fasta):
     for idx, gene in enumerate(genes):
@@ -33,10 +29,63 @@ if __name__ == '__main__':
     client = pymongo.MongoClient(
         "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
     db = client['genes']
-    collection = db['sequence']
-    if not collection.find_one({'name':'EVA'}):
-        collection.insert_one(eva)
-    if not collection.find_one({'name': 'ANDREWS'}):
-        collection.insert_one(andrews)
+    seqCollection = db['sequence']
+    if not seqCollection.find_one({'name':'EVA'}):
+        seqCollection.insert_one(eva)
+    if not seqCollection.find_one({'name': 'ANDREWS'}):
+        seqCollection.insert_one(andrews)
+    db['position_fasta'].delete_many({})
+    seqCollection.aggregate([
+      {
+        "$project": {
+          "letters": {
+            "$map": {
+              "input": {
+                "$range": [
+                  0,
+                  {
+                    "$strLenCP": "$fasta"
+                  }
+                ]
+              },
+              "as": "position",
+              "in": {
+                "position": "$$position",
+                "letter": {
+                  "$substr": [
+                    "$fasta",
+                    "$$position",
+                    1
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "$unwind": "$letters"
+      },
+      {
+        "$project": {
+          "seq_id": "$_id",
+          "letter": "$letters.letter",
+          "position": "$letters.position",
+          "_id": 0
+        }
+      },
+      {
+        "$merge": {
+          "into": "position_fasta",
+          "on": "_id",
+          "whenMatched": "replace",
+          "whenNotMatched": "insert"
+        }
+      }
+    ])
+
+    seqCollection.aggregate([{
+
+    }])
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
