@@ -1,4 +1,3 @@
-
 def decide_country(country: str):
     if country.lower() == 'ukraine':
         return 'UKR'
@@ -8,6 +7,32 @@ def decide_country(country: str):
         return 'BEL'
     return ''
 
+
+def decide_region_short(region: str):
+    if region.lower() == 'cherkasskaya':
+        return 'CH'
+    if region.lower() == 'khmelnitskaya':
+        return 'KHM'
+    if region.lower() == 'l\'vovskaya':
+        return 'ST'
+    if region.lower() == 'belgorodskaya':
+        return 'BG'
+    if region.lower() == 'ivano-frankovskaya':
+        return 'IF'
+    if region.lower() == 'sumskaya':
+        return 'SU'
+    if region.lower() == 'zhitomirskaya':
+        return 'ZH'
+    if region.lower() == 'kharkovskaya':
+        return "KHA"
+    if region.lower() == 'rovenskaya':
+        return 'RO'
+    if region.lower() == 'odesskaya':
+        return 'ODS'
+    if region.lower() == 'zakarpatskaya':
+        return 'ZA'
+
+
 def parse_files():
     with open('res/Ukraine.gp', 'r', encoding='utf-8') as myfile:
         genes = []
@@ -16,7 +41,7 @@ def parse_files():
             if not line:
                 break
             if "LOCUS" in line:
-                gene = {'length': (" ".join(line.split())).split()[2], 'number_of_carriers': 1, 'database': 'Ukraine' }
+                gene = {'length': (" ".join(line.split())).split()[2], 'number_of_carriers': 1, 'database': 'Ukraine'}
                 while True:
                     line2 = myfile.readline()
                     if line2.startswith('//'):
@@ -37,6 +62,7 @@ def parse_files():
                         location = {'country': country_string.split(':')[0]}
                         if 'oblast' in country_string:
                             location['oblast'] = country_string.split()[1]
+                            location['oblast_short'] = decide_region_short(country_string.split()[1])
                         if 'rayon' in country_string:
                             location['rayon'] = country_string.split()[3]
                         gene['location'] = location
@@ -47,7 +73,6 @@ def parse_files():
                             if line3.startswith('FEATURES'):
                                 break
                             line2 += line3
-                        gene['comment'] = " ".join(line2.replace('COMMENT','').replace('\n','').split())
+                        gene['comment'] = " ".join(line2.replace('COMMENT', '').replace('\n', '').split())
                 genes.append(gene)
         return genes
-
