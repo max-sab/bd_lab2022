@@ -84,6 +84,3 @@ def populate_db(elements):
         }
     ])
 
-    fasta_collection.aggregate([{
-
-    }])

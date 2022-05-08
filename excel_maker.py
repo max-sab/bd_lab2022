@@ -1,5 +1,5 @@
 import xlsxwriter
-from queries import get_haplogroups, each_with_each
+from queries import get_haplogroups, each_with_each, get_wild_type
 import pymongo
 import os
 
@@ -41,6 +41,12 @@ def create_excel():
       worksheet.write(row + 1, col, distance['count'])
       col += 1
     col += 1
+
+    wild_type = get_wild_type(db, task['regions'], task['databases'])
+    row += 3
+    col = 0
+    worksheet.write(row, col, "Дикий тип")
+    worksheet.write(row + 1, col, wild_type[0]["letters"])
 
 
   workbook.close()
