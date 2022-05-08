@@ -6,6 +6,8 @@ import pymongo
 from parse import parse_files
 from fasta_parser import parse_fasta
 from populate_db import populate_db
+from wild_type import calculate_general_wild_type
+from wild_type import calculate_wild_type_region
 
 
 def combine_results(genes, fasta):
