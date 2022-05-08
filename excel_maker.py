@@ -1,5 +1,5 @@
 import xlsxwriter
-from queries import get_haplogroups, each_with_each, get_wild_type
+from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly
 import pymongo
 import os
 
@@ -46,7 +46,20 @@ def create_excel():
     row += 3
     col = 0
     worksheet.write(row, col, "Дикий тип")
-    worksheet.write(row + 1, col, wild_type[0]["letters"])
+    worksheet.write(row, col + 1, wild_type[0]["letters"])
+
+    rCRS_poly = wild_type_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+    print("POLY!", rCRS_poly)
+    row += 1
+    col = 0
+    worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rCRS")
+    worksheet.write(row, col + 1, rCRS_poly[0]["_id"])
+
+    rSRS_poly = wild_type_to_base_poly(db, "EVA", task['regions'], task['databases'])
+    row += 1
+    col = 0
+    worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rSRS")
+    worksheet.write(row, col + 1, rSRS_poly[0]["_id"] - 1)
 
 
   workbook.close()

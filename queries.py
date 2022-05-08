@@ -128,6 +128,64 @@ def get_wild_type(db: Database[Mapping[str, Any]], regions=None, databases=None,
     ]))
 
 
+def wild_type_to_base_poly(db: Database[Mapping[str, Any]], name: str, regions=None, databases=None, ):
+    sequence = db['sequence']
+
+    wild_type = get_wild_type(db, regions, databases)[0]["letters"]
+    base_sequence = db['base_sequence'].find_one({"name": name})["fasta"]
+    print(base_sequence)
+    print(wild_type)
+    return list(sequence.aggregate([
+        {
+            "$project": {
+                "_id": 0,
+                "length": {
+                    "$reduce": {
+                        "input": {
+                            "$range": [
+                                0,
+                                377,
+                                1
+                            ]
+                        },
+                        "initialValue": 0,
+                        "in": {
+                            "$sum": [
+                                "$$value",
+                                {
+                                    "$abs": {
+                                        "$strcasecmp": [
+                                            {
+                                                "$substr": [
+                                                    wild_type,
+                                                    "$$this",
+                                                    1
+                                                ]
+                                            },
+                                            {
+                                                "$substr": [
+                                                    base_sequence,
+                                                    "$$this",
+                                                    1
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$length",
+            }
+        }
+    ]))
+
+
 def get_haplogroups(db: Database[Mapping[str, Any]], regions=None, databases=None, ):
     find_by = None
     if (regions is None) or (len(regions) == 0):
@@ -293,4 +351,4 @@ if __name__ == '__main__':
     client = pymongo.MongoClient(
         "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
     db = client['genes']
-    print(get_wild_type(db, [], ["Ukraine"]))
+    print(wild_type_to_base_poly(db, "EVA", [], ["Ukraine"]))
