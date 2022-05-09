@@ -4,7 +4,10 @@ import pymongo
 import os
 
 
-tasks = [{"regions": [], "databases": ["Ukraine"], "name": "UKR"}, {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska"}]
+tasks = [{"regions": [], "databases": ["Ukraine"], "name": "UKR"},
+         {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska"},
+         {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr"}
+         ]
 
 
 def create_excel():
@@ -17,7 +20,7 @@ def create_excel():
   for index, task in enumerate(tasks):
     row = 0
     col = 0
-    worksheet = workbook.add_worksheet(task['name'] + "-" + str(index))
+    worksheet = workbook.add_worksheet(task['name'] + "-" + str(index+1))
     haplogroups = get_haplogroups(db, task['regions'], task['databases'])
     worksheet.write(row, col, "Гаплогрупа")
     worksheet.write(row+1, col, "Кількість представників")
@@ -59,7 +62,7 @@ def create_excel():
     row += 1
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rSRS")
-    worksheet.write(row, col + 1, rSRS_poly[0]["_id"] - 1)
+    worksheet.write(row, col + 1, rSRS_poly[0]["_id"])
 
 
   workbook.close()
