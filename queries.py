@@ -186,6 +186,55 @@ def wild_type_to_base_poly(db: Database[Mapping[str, Any]], name: str, regions=N
     ]))
 
 
+def find_percentage(db: Database[Mapping[str, Any]], task, distr_name):
+  data = list(db['distributions'].aggregate([
+    {
+      "$match": {
+        "name": distr_name,
+        "task_id": task["number"]
+      }
+    },
+    {
+      "$unwind": "$distances"
+    },
+    {
+      "$group": {
+        "_id": None,
+        "sum": {"$sum": "$distances.count"},
+        "distances": {"$push": {"_id": "$distances._id", "count": "$distances.count"}}
+      }
+    },
+    {
+      "$unwind": {
+        "path": "$distances",
+
+      }
+    },
+    {
+      "$project": {
+          "_id": "$distances._id",
+          "count": "$distances.count",
+          "percent": {"$divide": ["$distances.count", "$sum"]},
+      }
+    }
+  ]))
+  print(data)
+  return data
+
+
+def calculate_formulas(db: Database[Mapping[str, Any]], task, distr_name):
+  mat_spod = list(db['distributions'].aggregate([
+    {
+      "$match": {
+        "name": distr_name,
+        "task_id": task["number"]
+      }
+    }
+  ]))
+  return {
+    mat_spod
+  }
+
 def get_haplogroups(db: Database[Mapping[str, Any]], regions=None, databases=None, ):
     find_by = None
     if (regions is None) or (len(regions) == 0):
@@ -216,16 +265,16 @@ def get_haplogroups(db: Database[Mapping[str, Any]], regions=None, databases=Non
     ]))
 
 
-def each_with_each(db: Database[Mapping[str, Any]], regions=None, databases=None, ):
-    find_by = None
-    if (regions is None) or (len(regions) == 0):
-        find_by = {
-            "$in": ["$database", databases]
-        }
-    if (databases is None) or (len(databases) == 0):
-        find_by = {
-            "$in": ["$region_cypher", regions]
-        }
+def each_with_each(db: Database[Mapping[str, Any]], task):
+  find_by = None
+  if (task['regions'] is None) or (len(task['regions']) == 0):
+    find_by = {
+      "$in": ["$database", task['databases']]
+    }
+  if (task['databases'] is None) or (len(task['databases']) == 0):
+    find_by = {
+      "$in": ["$region_cypher", task['regions']]
+    }
 
     print(find_by)
     sequence = db['sequence']
@@ -343,8 +392,12 @@ def each_with_each(db: Database[Mapping[str, Any]], regions=None, databases=None
             }
         }
     ]))
-    print(data)
-    return data
+  db['distributions'].insert_one({
+    'name': 'ewe',
+    'distances': data,
+    'task_id': task['number']
+  })
+  return data
 
 
 if __name__ == '__main__':

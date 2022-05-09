@@ -1,12 +1,13 @@
 import xlsxwriter
-from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly
+from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly, find_percentage, calculate_formulas
 import pymongo
 import os
+import time
 
 
-tasks = [{"regions": [], "databases": ["Ukraine"], "name": "UKR"},
-         {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska"},
-         {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr"}
+tasks = [{"regions": [], "databases": ["Ukraine"], "name": "UKR", "number": 1},
+         {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska", "number": 2},
+         {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr", "number": 3}
          ]
 
 
@@ -17,10 +18,22 @@ def create_excel():
   client = pymongo.MongoClient(
     "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
   db = client['genes']
-  for index, task in enumerate(tasks):
+  db['tasks'].delete_many({})
+  db['distributions'].delete_many({})
+  if 'tasks' not in db.list_collection_names():
+    db.create_collection('tasks')
+  if 'distributions' not in db.list_collection_names():
+    db.create_collection('distributions')
+  for task in tasks:
+    tasks_collection = db['tasks']
+    tasks_collection.insert_one({
+      '_id': task['number'],
+      "name": task['name']
+    })
+    start = time.time()
     row = 0
     col = 0
-    worksheet = workbook.add_worksheet(task['name'] + "-" + str(index+1))
+    worksheet = workbook.add_worksheet(task['name'] + "-" + str(task['number']))
     haplogroups = get_haplogroups(db, task['regions'], task['databases'])
     worksheet.write(row, col, "Гаплогрупа")
     worksheet.write(row+1, col, "Кількість представників")
@@ -32,16 +45,19 @@ def create_excel():
     row += 3
     col = 0
     worksheet.write(row, col, "Відстань")
-    row += 1
-    worksheet.write(row, col, "Розподіл відносно попарних")
-    worksheet.write(row + 1, col, "Розподіл відносно попарних (частка)")
+    worksheet.write(row + 1, col, "Розподіл відносно попарних")
+    worksheet.write(row + 2, col, "Розподіл відносно попарних (частка)")
     col += 1
-    distances_each_with_each = each_with_each(db, task['regions'], task['databases'])
-    print(distances_each_with_each)
+    distances_each_with_each = each_with_each(db, task)
+    ewe_percentage = find_percentage(db, task, 'ewe')
+    calculations = calculate_formulas(db, task, 'ewe')
     for distance in distances_each_with_each:
-      print(distance)
       worksheet.write(row, col, distance['_id'])
       worksheet.write(row + 1, col, distance['count'])
+      col += 1
+    col = 1
+    for percent in ewe_percentage:
+      worksheet.write(row + 2, col, percent['percent'])
       col += 1
     col += 1
 
@@ -63,6 +79,9 @@ def create_excel():
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rSRS")
     worksheet.write(row, col + 1, rSRS_poly[0]["_id"])
+    end = time.time()
+    total_time = end - start
+    print("Task-"+str(task['number']) + " time: " + str(total_time))
 
 
   workbook.close()
