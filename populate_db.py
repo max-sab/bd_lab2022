@@ -7,6 +7,23 @@ andrews = {
     'fasta': 'TTCTTTCATGGGGAAGCAGATTTGGGTACCACCCAAGTATTGACTCACCCATCAACAACCGCTATGTATTTCGTACATTACTGCCAGCCACCATGAATATTGTACGGTACCATAAATACTTGACCACCTGTAGTACATAAAAACCCAATCCACATCAAAACCCCCTCCCCATGCTTACAAGCAAGTACAGCAATCAACCCTCAACTATCACACATCAACTGCAACTCCAAAGCCACCCCTCACCCACTAGGATACCAACAAACCTACCCACCCTTAACAGTACATAGTACATAAAGCCATTTACCGTACATAGCACATTACAGTCAAATCCCTTCTCGTCCCCATGGATGACCCCCCTCAGATAGGGGTCCCTTGAC',
     'name': "ANDREWS"}
 
+def add_balto_slavic(elements):
+    client = pymongo.MongoClient(
+        "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
+    db = client['genes']
+    location_collection = db['location']
+    fasta_collection = db['fasta']
+    general_collection = db['sequence']
+
+    for element in elements:
+        location = element.pop("location")
+        location_id = location_collection.insert_one(location).inserted_id
+        element["location_id"] = location_id
+        fasta = element.pop("fasta")
+        fasta_id = fasta_collection.insert_one({"fasta": fasta, "type": "general"}).inserted_id
+        element["fasta_id"] = fasta_id
+        general_collection.insert_one(element)
+
 def populate_db(elements):
     client = pymongo.MongoClient(
         "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")

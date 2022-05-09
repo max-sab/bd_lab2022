@@ -1,4 +1,4 @@
-fasta_file_location = "res/Ukraine.fasta"
+fasta_file_location = "res/Balto_Slavic.fasta"
 
 words_black_list = ["Homo", "sapiens", "D-loop,", "partial", "sequence;", "isolate"]
 
@@ -11,8 +11,10 @@ def parse_fasta():
     for fasta in parsed_fasta[1:]:
         split_fasta = fasta.split(" ")
         fasta_sequence = split_fasta[2:]
-        final_dict[split_fasta[0]] = {
-            "cypher": split_fasta[1],
+        cypher = split_fasta[1]
+        key = split_fasta[0]
+        final_dict[key] = {
+            "cypher": cypher,
             "fasta": fasta_sequence[0].replace("\n", ""),
             "region_cypher" : split_fasta[1][:2].replace("-", "")
         }
