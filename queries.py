@@ -314,18 +314,91 @@ def find_percentage(db: Database[Mapping[str, Any]], task, distr_name):
 
 
 def calculate_formulas(db: Database[Mapping[str, Any]], task, distr_name):
-    mat_spod = list(db['distributions'].aggregate([
-        {
-            "$match": {
-                "name": distr_name,
-                "task_id": task["number"]
-            }
-        }
-    ]))
-    return {
-        mat_spod
-    }
+  mat_spod_max_min = list(db['distributions'].aggregate([
+    {
+      "$match": {
+        "name": distr_name,
+        "task_id": task["number"]
+      }
+    },
+    {
+      "$unwind": "$distances"
+    },
+    {
+      "$group": {
+        "_id": None,
+        "sum": {"$sum": "$distances.count"},
+        "distances": {"$push": {"_id": "$distances._id", "count": "$distances.count"}}
+      }
+    },
+    {
+      "$unwind": {
+        "path": "$distances",
 
+      }
+    },
+    {
+      "$project": {
+        "_id": "$distances._id",
+        "count": "$distances.count",
+        "percent": {"$divide": ["$distances.count", "$sum"]},
+      }
+    },
+    {
+      "$set": {
+        "mult": {
+          "$multiply": ["$_id", "$percent"]
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": None,
+        "mat_spod": {
+          "$sum": "$mult"
+        },
+        "max": {
+            "$max": "$_id",
+        },
+        "min":{
+          "$min": "$_id",
+        },
+
+      }
+    },
+  ]))[0]
+  mode = list(db['distributions'].aggregate([
+    {
+      "$match": {
+        "name": distr_name,
+        "task_id": task["number"]
+      }
+    },
+    {
+      "$unwind": "$distances"
+    },
+    {
+      "$sort": {
+        "distances.count": -1
+      }
+    },
+    {
+      "$limit": 1
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "mode": "$distances._id"
+      }
+    }
+  ]))
+  print(mode)
+  print(mat_spod_max_min)
+  return {
+    "mat_spod": mat_spod_max_min["mat_spod"],
+    "max": mat_spod_max_min["max"],
+    "min": mat_spod_max_min["min"],
+  }
 
 def get_haplogroups(db: Database[Mapping[str, Any]], regions=None, databases=None, ):
     find_by = None
@@ -368,128 +441,128 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
             "$in": ["$region_cypher", task['regions']]
         }
 
-        print(find_by)
-        sequence = db['sequence']
-        data = list(sequence.aggregate([
-            {
-                "$match": {
-                    "$expr": find_by
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "fasta",
-                    "localField": "fasta_id",
-                    "foreignField": "_id",
-                    "as": "fasta_obj"
-                }
-            },
-            {"$unwind": "$fasta_obj"},
-            {
-                "$project": {
-                    "_id": "$fasta_id",
-                    "fasta": "$fasta_obj.fasta"
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "fasta",
-                    "let": {
-                        "seq_id": "$_id",
-                        "fasta2": "$fasta"
-                    },
-                    "pipeline": [
-                        {
-                            "$match": {
-                                "$expr": {
-                                    "$gt": [
-                                        "$_id",
-                                        "$$seq_id"
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    "as": "fasta2"
-                }
-            },
-            {
-                "$match": {
-                    "fastas": {
-                        "$not": {
-                            "$size": 0
-                        }
-                    }
-                }
-            },
-            {
-                "$unwind": "$fasta2"
-            },
-            {
-                "$project": {
-                    "_id": 1,
-                    "fasta": 1,
-                    "fasta2": "$fasta2.fasta",
-                    "length": {
-                        "$reduce": {
-                            "input": {
-                                "$range": [
-                                    0,
-                                    377,
-                                    1
+    print(find_by)
+    sequence = db['sequence']
+    data = list(sequence.aggregate([
+        {
+            "$match": {
+                "$expr": find_by
+            }
+        },
+        {
+            "$lookup": {
+                "from": "fasta",
+                "localField": "fasta_id",
+                "foreignField": "_id",
+                "as": "fasta_obj"
+            }
+        },
+        {"$unwind": "$fasta_obj"},
+        {
+            "$project": {
+                "_id": "$fasta_id",
+                "fasta": "$fasta_obj.fasta"
+            }
+        },
+        {
+            "$lookup": {
+                "from": "fasta",
+                "let": {
+                    "seq_id": "$_id",
+                    "fasta2": "$fasta"
+                },
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {
+                                "$gt": [
+                                    "$_id",
+                                    "$$seq_id"
                                 ]
-                            },
-                            "initialValue": 0,
-                            "in": {
-                                "$sum": [
-                                    "$$value",
-                                    {
-                                        "$abs": {
-                                            "$strcasecmp": [
-                                                {
-                                                    "$substr": [
-                                                        "$fasta",
-                                                        "$$this",
-                                                        1
-                                                    ]
-                                                },
-                                                {
-                                                    "$substr": [
-                                                        "$fasta2.fasta",
-                                                        "$$this",
-                                                        1
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    }
-                                ],
-
                             }
                         }
                     }
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$length",
-                    "count": {
-                        "$count": {}
+                ],
+                "as": "fasta2"
+            }
+        },
+        {
+            "$match": {
+                "fastas": {
+                    "$not": {
+                        "$size": 0
                     }
-                }
-            },
-            {
-                "$sort": {
-                    "_id": 1
                 }
             }
-        ]))
-        db['distributions'].insert_one({
-            'name': 'ewe',
-            'distances': data,
-            'task_id': task['number']
-        })
-        return data
+        },
+        {
+            "$unwind": "$fasta2"
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "fasta": 1,
+                "fasta2": "$fasta2.fasta",
+                "length": {
+                    "$reduce": {
+                        "input": {
+                            "$range": [
+                                0,
+                                377,
+                                1
+                            ]
+                        },
+                        "initialValue": 0,
+                        "in": {
+                            "$sum": [
+                                "$$value",
+                                {
+                                    "$abs": {
+                                        "$strcasecmp": [
+                                            {
+                                                "$substr": [
+                                                    "$fasta",
+                                                    "$$this",
+                                                    1
+                                                ]
+                                            },
+                                            {
+                                                "$substr": [
+                                                    "$fasta2.fasta",
+                                                    "$$this",
+                                                    1
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$length",
+                "count": {
+                    "$count": {}
+                }
+            }
+        },
+        {
+            "$sort": {
+                "_id": 1
+            }
+        }
+    ]))
+    db['distributions'].insert_one({
+        'name': 'ewe',
+        'distances': data,
+        'task_id': task['number']
+    })
+    return data
 
 
 if __name__ == '__main__':
