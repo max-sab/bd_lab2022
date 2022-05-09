@@ -1,5 +1,5 @@
 import xlsxwriter
-from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly, find_percentage, calculate_formulas
+from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly, find_percentage, calculate_formulas, population_to_base_poly
 import pymongo
 import os
 import time
@@ -79,6 +79,19 @@ def create_excel():
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rSRS")
     worksheet.write(row, col + 1, rSRS_poly[0]["_id"])
+
+    rCRS_poly_population = population_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+    print("POLY! Population", rCRS_poly)
+    row += 1
+    col = 0
+    worksheet.write(row, col, "Кількість поліморфізмів у популяції відносно базової rCRS")
+    worksheet.write(row, col + 1, rCRS_poly_population[0]["count"])
+
+    rSRS_poly_population = population_to_base_poly(db, "EVA", task['regions'], task['databases'])
+    row += 1
+    col = 0
+    worksheet.write(row, col, "Кількість поліморфізмів у популяції відносно базової RSRS")
+    worksheet.write(row, col + 1, rSRS_poly_population[0]["count"])
     end = time.time()
     total_time = end - start
     print("Task-"+str(task['number']) + " time: " + str(total_time))
