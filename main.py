@@ -1,7 +1,3 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 import pymongo
 from parse import parse_files
 from fasta_parser import parse_fasta
@@ -17,7 +13,4 @@ if __name__ == '__main__':
     genes = parse_files()
     fasta = parse_fasta()
     combine_results(genes, fasta)
-    #print(genes[140])
     populate_db(genes)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
