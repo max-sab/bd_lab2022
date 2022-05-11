@@ -5,9 +5,16 @@ import os
 import time
 
 
-tasks = [{"regions": [], "databases": ["Ukraine"], "name": "UKR", "number": 1},
+tasks = [
+  {"regions": [], "databases": ["Ukraine"], "name": "UKR", "number": 1},
          {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska", "number": 2},
-         {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr", "number": 3}
+         {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr", "number": 3},
+         # {"regions": ["BRST", "GML", "VTB"], "databases": [], "name": "BaltoSlavic-BEL", "number": 4},
+         # {"regions": ["PNG", "KSTR", "SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-All", "number": 5},
+         # {"regions": ["SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-South", "number": 6},
+         # {"regions": ["PNG", "KSTR"], "databases": [], "name": "BaltoSlavic-RUS-North", "number": 7},
+         # {"regions": ["PNG", "KSTR", "SML", "BLG", "BRST","GML","VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_all", "number": 12},
+         # {"regions": ["SML", "BLG", "BRST", "GML", "VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_south", "number": 13}
          ]
 
 def print_formulas(worksheet, col, row, calculations):
@@ -29,9 +36,9 @@ def create_excel():
   if os.path.exists('Result.xlsx'):
     os.remove('Result.xlsx')
   workbook = xlsxwriter.Workbook('Result.xlsx')
-  #client = pymongo.MongoClient(
-   # "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
-  client = pymongo.MongoClient('localhost', 27017)
+  client = pymongo.MongoClient(
+   "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
+  # client = pymongo.MongoClient('localhost', 27017)
   db = client['genes']
   db['tasks'].delete_many({})
   db['distributions'].delete_many({})

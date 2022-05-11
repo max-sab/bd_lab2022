@@ -16,15 +16,6 @@ def calc_wild_type(db: Database[Mapping[str, Any]], task):
                 }
         },
         {
-            "$lookup": {
-                "from": "fasta",
-                "localField": "fasta_id",
-                "foreignField": "_id",
-                "as": "positions"
-            }
-        },
-        {"$unwind": "$positions"},
-        {
             "$project": {
                 "letters": {
                     "$map": {
@@ -32,7 +23,7 @@ def calc_wild_type(db: Database[Mapping[str, Any]], task):
                             "$range": [
                                 0,
                                 {
-                                    "$strLenCP": "$positions.fasta"
+                                    "$strLenCP": "$fasta"
                                 }
                             ]
                         },
@@ -41,7 +32,7 @@ def calc_wild_type(db: Database[Mapping[str, Any]], task):
                             "position": "$$position",
                             "letter": {
                                 "$substr": [
-                                    "$positions.fasta",
+                                    "$fasta",
                                     "$$position",
                                     1
                                 ]
@@ -400,18 +391,9 @@ def distances_with_base(db: Database[Mapping[str, Any]], task, baseSequenceName:
             }
         },
         {
-            "$lookup": {
-                "from": "fasta",
-                "localField": "fasta_id",
-                "foreignField": "_id",
-                "as": "fasta_obj"
-            }
-        },
-        {"$unwind": "$fasta_obj"},
-        {
             "$project": {
-                "_id": "$fasta_id",
-                "fasta": "$fasta_obj.fasta"
+                "_id": 1,
+                "fasta": 1
             }
         },
         {
@@ -504,6 +486,9 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
     find_by = {
         "$or": [{"$in": ["$database", task['databases']]}, {"$in": ["$region_cypher", task['regions']]}]
     }
+    find_by_2 = {
+        "$or": [{"$in": ["$$database", task['databases']]}, {"$in": ["$$region_cypher", task['regions']]}]
+    }
 
     sequence = db['sequence']
     data = list(sequence.aggregate([
@@ -514,44 +499,41 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
         },
         {
             "$lookup": {
-                "from": "fasta",
-                "localField": "fasta_id",
-                "foreignField": "_id",
-                "as": "fasta_obj"
-            }
-        },
-        {"$unwind": "$fasta_obj"},
-        {
-            "$project": {
-                "_id": "$fasta_id",
-                "fasta": "$fasta_obj.fasta"
-            }
-        },
-        {
-            "$lookup": {
-                "from": "fasta",
+                "from": "sequence",
                 "let": {
                     "seq_id": "$_id",
-                    "fasta2": "$fasta"
+                    "fasta2": "$fasta",
+                    "region_cypher": "$region_cypher",
+                    "database": "$database"
                 },
                 "pipeline": [
                     {
                         "$match": {
+                            "$expr": find_by_2
+                        }
+                    },
+                    {
+                        "$match": {
                             "$expr": {
                                 "$gt": [
+                                    "$$seq_id",
                                     "$_id",
-                                    "$$seq_id"
-                                ]
+                                ],
                             }
                         }
-                    }
+                    },
+                    {
+                        "$project": {
+                            "fasta": 1,
+                        }
+                    },
                 ],
                 "as": "fasta2"
             }
         },
         {
             "$match": {
-                "fastas": {
+                "fasta2": {
                     "$not": {
                         "$size": 0
                     }
