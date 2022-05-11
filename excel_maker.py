@@ -26,75 +26,95 @@ def create_excel():
     db.create_collection('distributions')
   for task in tasks:
     tasks_collection = db['tasks']
+    start = time.time()
     tasks_collection.insert_one({
       '_id': task['number'],
       "name": task['name']
     })
-    start = time.time()
+    haplogroups = get_haplogroups(db, task['regions'], task['databases'])
+    distances_each_with_each = each_with_each(db, task)
+    calculations = calculate_formulas(db, task, 'ewe')
+    wild_type = get_wild_type(db, task['regions'], task['databases'])
+    rCRS_poly = wild_type_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+    rSRS_poly = wild_type_to_base_poly(db, "EVA", task['regions'], task['databases'])
+    rCRS_poly_population = population_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+    rSRS_poly_population = population_to_base_poly(db, "EVA", task['regions'], task['databases'])
+    end = time.time()
+    total_time = end - start
+
+    print("Task-" + str(task['number']) + " time: " + str(total_time))
+
     row = 0
     col = 0
     worksheet = workbook.add_worksheet(task['name'] + "-" + str(task['number']))
-    haplogroups = get_haplogroups(db, task['regions'], task['databases'])
-    worksheet.write(row, col, "Гаплогрупа")
-    worksheet.write(row+1, col, "Кількість представників")
-    col += 1
-    for haplo in haplogroups:
-      worksheet.write(row, col, haplo['_id'])
-      worksheet.write(row+1, col, haplo['count'])
-      col += 1
-    row += 3
-    col = 0
+
     worksheet.write(row, col, "Відстань")
     worksheet.write(row + 1, col, "Розподіл відносно попарних")
     worksheet.write(row + 2, col, "Розподіл відносно попарних (частка)")
     col += 1
-    distances_each_with_each = each_with_each(db, task)
-    ewe_percentage = find_percentage(db, task, 'ewe')
-    calculations = calculate_formulas(db, task, 'ewe')
+
     for distance in distances_each_with_each:
       worksheet.write(row, col, distance['_id'])
       worksheet.write(row + 1, col, distance['count'])
+      worksheet.write(row + 2, col, distance['percent'])
       col += 1
     col = 1
-    for percent in ewe_percentage:
-      worksheet.write(row + 2, col, percent['percent'])
-      col += 1
-    col += 1
+    row += 3
+    worksheet.write(row, col, "Мат. сподівання")
+    worksheet.write(row, col+1, "Серєднє квадратичне відхилення")
+    worksheet.write(row, col+2, "Мода")
+    worksheet.write(row, col+3, "Мінімум")
+    worksheet.write(row, col+4, "Максимум")
+    worksheet.write(row, col+5, "Коеф. варіації")
+    worksheet.write(row+1, col, calculations['mat_spod'])
+    worksheet.write(row+1, col + 1, calculations['std'])
+    worksheet.write(row+1, col + 2, calculations['mode'])
+    worksheet.write(row+1, col + 3, calculations['min'])
+    worksheet.write(row+1, col + 4, calculations['max'])
+    worksheet.write(row+1, col + 5, calculations['variationCoef'])
 
-    wild_type = get_wild_type(db, task['regions'], task['databases'])
+
     row += 3
     col = 0
     worksheet.write(row, col, "Дикий тип")
     worksheet.write(row, col + 1, wild_type[0]["letters"])
 
-    rCRS_poly = wild_type_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+
     print("POLY!", rCRS_poly)
     row += 1
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rCRS")
     worksheet.write(row, col + 1, rCRS_poly[0]["_id"])
 
-    rSRS_poly = wild_type_to_base_poly(db, "EVA", task['regions'], task['databases'])
+
     row += 1
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у дикого типу відносно базової rSRS")
     worksheet.write(row, col + 1, rSRS_poly[0]["_id"])
 
-    rCRS_poly_population = population_to_base_poly(db, "ANDREWS", task['regions'], task['databases'])
+
     print("POLY! Population", rCRS_poly)
     row += 1
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у популяції відносно базової rCRS")
     worksheet.write(row, col + 1, rCRS_poly_population[0]["count"])
 
-    rSRS_poly_population = population_to_base_poly(db, "EVA", task['regions'], task['databases'])
+
     row += 1
     col = 0
     worksheet.write(row, col, "Кількість поліморфізмів у популяції відносно базової RSRS")
     worksheet.write(row, col + 1, rSRS_poly_population[0]["count"])
-    end = time.time()
-    total_time = end - start
-    print("Task-"+str(task['number']) + " time: " + str(total_time))
+
+    row += 3
+    col = 0
+    worksheet.write(row, col, "Гаплогрупа")
+    worksheet.write(row + 1, col, "Кількість представників")
+    col += 1
+    for haplo in haplogroups:
+      worksheet.write(row, col, haplo['_id'])
+      worksheet.write(row + 1, col, haplo['count'])
+      col += 1
+
 
 
   workbook.close()
