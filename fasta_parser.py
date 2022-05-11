@@ -20,10 +20,11 @@ def read_fasta(file):
         fasta_sequence = split_fasta[2:]
         cypher = split_fasta[1]
         key = split_fasta[0]
+        region_cypher = split_fasta[1][:4].replace("-", "")
         final_dict[key] = {
             "cypher": cypher,
             "fasta": fasta_sequence[0].replace("\n", ""),
-            "region_cypher": split_fasta[1][:2].replace("-", "")
+            "region_cypher": ''.join([i for i in region_cypher if not i.isdigit()])
         }
 
     return final_dict

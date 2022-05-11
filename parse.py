@@ -9,45 +9,6 @@ def decide_country(country: str):
         return 'CZ'
     return ''
 
-
-# def decide_region_short(region: str):
-#     if region.lower() == 'cherkasskaya':
-#         return 'CH'
-#     if region.lower() == 'khmelnitskaya':
-#         return 'KHM'
-#     if region.lower() == 'l\'vovskaya':
-#         return 'ST'
-#     if region.lower() == 'belgorodskaya':
-#         return 'BG'
-#     if region.lower() == 'ivano-frankovskaya':
-#         return 'IF'
-#     if region.lower() == 'sumskaya':
-#         return 'SU'
-#     if region.lower() == 'zhitomirskaya':
-#         return 'ZH'
-#     if region.lower() == 'kharkovskaya':
-#         return "KHA"
-#     if region.lower() == 'rovenskaya':
-#         return 'RO'
-#     if region.lower() == 'odesskaya':
-#         return 'ODS'
-#     if region.lower() == 'zakarpatskaya':
-#         return 'ZA'
-#     if region.lower() == 'brest':
-#         return 'BRST'
-#     if region.lower() == 'gomel':
-#         return 'GML'
-#     if region.lower() == 'vitebsk':
-#         return 'VTB'
-#     if region.lower() == 'arkhangelsk':
-#         return 'PNG'
-#     if region.lower() == 'kostroma':
-#         return 'KSTR'
-#     if region.lower() == 'smolensk':
-#         return 'SML'
-#     if region.lower() == 'belgorod':
-#         return 'BLG'
-
 version_black_list = ["KT262553.1", "KT262558.1"]
 
 def read_file(file_name, db_name):
@@ -91,7 +52,8 @@ def read_file(file_name, db_name):
                                 break
                             line2 += line3
                         gene['comment'] = " ".join(line2.replace('COMMENT', '').replace('\n', '').split())
-                genes.append(gene)
+                if gene["code"] not in version_black_list:
+                    genes.append(gene)
         return genes
 
 def parse_files():
