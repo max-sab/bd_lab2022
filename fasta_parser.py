@@ -1,12 +1,19 @@
-fasta_file_location = "res/Balto_Slavic.fasta"
+ukr_fasta_file_location = "res/Ukraine.fasta"
+balto_slavic_fasta_file_location = "res/Balto_Slavic.fasta"
 
 words_black_list = ["Homo", "sapiens", "D-loop,", "partial", "sequence;", "isolate"]
 
 def parse_fasta():
+    file = open(ukr_fasta_file_location, "r")
+    ukraine_fasta = read_fasta(file)
+    file = open(balto_slavic_fasta_file_location, "r")
+    balto_slavic_fasta = read_fasta(file)
+    return {**ukraine_fasta, **balto_slavic_fasta}
+
+def read_fasta(file):
     final_dict = {}
-    file = open(fasta_file_location, "r")
     file_text = file.read().replace(r"mitochondrial", "").split(" ")
-    filter_data = list(filter(lambda x : x not in words_black_list, file_text))
+    filter_data = list(filter(lambda x: x not in words_black_list, file_text))
     parsed_fasta = " ".join(filter_data).split(">")
     for fasta in parsed_fasta[1:]:
         split_fasta = fasta.split(" ")
@@ -16,7 +23,7 @@ def parse_fasta():
         final_dict[key] = {
             "cypher": cypher,
             "fasta": fasta_sequence[0].replace("\n", ""),
-            "region_cypher" : split_fasta[1][:2].replace("-", "")
+            "region_cypher": split_fasta[1][:2].replace("-", "")
         }
 
     return final_dict

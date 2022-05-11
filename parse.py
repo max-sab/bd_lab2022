@@ -9,49 +9,49 @@ def decide_country(country: str):
         return 'CZ'
     return ''
 
-
-def decide_region_short(region: str):
-    if region.lower() == 'cherkasskaya':
-        return 'CH'
-    if region.lower() == 'khmelnitskaya':
-        return 'KHM'
-    if region.lower() == 'l\'vovskaya':
-        return 'ST'
-    if region.lower() == 'belgorodskaya':
-        return 'BG'
-    if region.lower() == 'ivano-frankovskaya':
-        return 'IF'
-    if region.lower() == 'sumskaya':
-        return 'SU'
-    if region.lower() == 'zhitomirskaya':
-        return 'ZH'
-    if region.lower() == 'kharkovskaya':
-        return "KHA"
-    if region.lower() == 'rovenskaya':
-        return 'RO'
-    if region.lower() == 'odesskaya':
-        return 'ODS'
-    if region.lower() == 'zakarpatskaya':
-        return 'ZA'
-    if region.lower() == 'brest':
-        return 'BRST'
-    if region.lower() == 'gomel':
-        return 'GML'
-    if region.lower() == 'vitebsk':
-        return 'VTB'
-    if region.lower() == 'arkhangelsk':
-        return 'PNG'
-    if region.lower() == 'kostroma':
-        return 'KSTR'
-    if region.lower() == 'smolensk':
-        return 'SML'
-    if region.lower() == 'belgorod':
-        return 'BLG'
+#
+# def decide_region_short(region: str):
+#     if region.lower() == 'cherkasskaya':
+#         return 'CH'
+#     if region.lower() == 'khmelnitskaya':
+#         return 'KHM'
+#     if region.lower() == 'l\'vovskaya':
+#         return 'ST'
+#     if region.lower() == 'belgorodskaya':
+#         return 'BG'
+#     if region.lower() == 'ivano-frankovskaya':
+#         return 'IF'
+#     if region.lower() == 'sumskaya':
+#         return 'SU'
+#     if region.lower() == 'zhitomirskaya':
+#         return 'ZH'
+#     if region.lower() == 'kharkovskaya':
+#         return "KHA"
+#     if region.lower() == 'rovenskaya':
+#         return 'RO'
+#     if region.lower() == 'odesskaya':
+#         return 'ODS'
+#     if region.lower() == 'zakarpatskaya':
+#         return 'ZA'
+#     if region.lower() == 'brest':
+#         return 'BRST'
+#     if region.lower() == 'gomel':
+#         return 'GML'
+#     if region.lower() == 'vitebsk':
+#         return 'VTB'
+#     if region.lower() == 'arkhangelsk':
+#         return 'PNG'
+#     if region.lower() == 'kostroma':
+#         return 'KSTR'
+#     if region.lower() == 'smolensk':
+#         return 'SML'
+#     if region.lower() == 'belgorod':
+#         return 'BLG'
 
 version_black_list = ["KT262553.1", "KT262558.1"]
 
-def parse_files():
-    with open('res/Ukraine.gp', 'r', encoding='utf-8') as myfile:
+def read_file(file_name):
+    with open(file_name, 'r', encoding='utf-8') as myfile:
         genes = []
         while True:
             line = myfile.readline()
@@ -79,7 +79,7 @@ def parse_files():
                         location = {'country': country_string.split(':')[0]}
                         if 'oblast' in country_string:
                             location['oblast'] = country_string.split()[1]
-                            location['oblast_short'] = decide_region_short(country_string.split()[1])
+                            # location['oblast_short'] = decide_region_short(country_string.split()[1])
                         if 'rayon' in country_string:
                             location['rayon'] = country_string.split()[3]
                         gene['location'] = location
@@ -93,6 +93,11 @@ def parse_files():
                         gene['comment'] = " ".join(line2.replace('COMMENT', '').replace('\n', '').split())
                 genes.append(gene)
         return genes
+
+def parse_files():
+    ukraine_files = read_file("res/Ukraine.gp")
+    balto_slavic_files = read_file("res/Balto_Slavic.gp")
+    return ukraine_files + balto_slavic_files
 
 
 def parse_balto_slavic_files():
@@ -124,7 +129,7 @@ def parse_balto_slavic_files():
                         location = {'country': country_string.split(':')[0]}
                         if 'oblast' in country_string:
                             location['oblast'] = country_string.split()[1]
-                            location['oblast_short'] = decide_region_short(country_string.split()[1])
+                            # location['oblast_short'] = decide_region_short(country_string.split()[1])
                         if 'rayon' in country_string:
                             location['rayon'] = country_string.split()[3]
                         gene['location'] = location

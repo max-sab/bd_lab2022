@@ -29,8 +29,9 @@ def create_excel():
   if os.path.exists('Result.xlsx'):
     os.remove('Result.xlsx')
   workbook = xlsxwriter.Workbook('Result.xlsx')
-  client = pymongo.MongoClient(
-    "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
+  #client = pymongo.MongoClient(
+   # "mongodb+srv://evo:evolutional@evolutional.aweop.mongodb.net/genes?retryWrites=true&w=majority")
+  client = pymongo.MongoClient('localhost', 27017)
   db = client['genes']
   db['tasks'].delete_many({})
   db['distributions'].delete_many({})
