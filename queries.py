@@ -133,18 +133,9 @@ def population_to_base_poly(db: Database[Mapping[str, Any]], name: str, task):
                 }
         },
         {
-            "$lookup": {
-                "from": "fasta",
-                "localField": "fasta_id",
-                "foreignField": "_id",
-                "as": "fasta_obj"
-            }
-        },
-        {"$unwind": "$fasta_obj"},
-        {
             "$project": {
-                "_id": "$fasta_id",
-                "fasta": "$fasta_obj.fasta"
+                "_id": 1,
+                "fasta": 1
             }
         },
         {
