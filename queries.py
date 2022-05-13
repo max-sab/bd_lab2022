@@ -497,15 +497,6 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
             }
         },
         {
-            "$match": {
-                "fasta2": {
-                    "$not": {
-                        "$size": 0
-                    }
-                }
-            }
-        },
-        {
             "$unwind": "$fasta2"
         },
         {
@@ -606,6 +597,73 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
         'task_id': task['number']
     })
     return data
+
+def wild_each_with_each(db: Database[Mapping[str, Any]]):
+    task = db['tasks']
+
+    return list(task.aggregate([
+            {
+                '$lookup': {
+                    'from': 'tasks',
+                    'pipeline': [],
+                    'as': 'task2'
+                }
+            }, {
+            '$unwind': '$task2'
+        }, {
+            '$match': {
+                '$expr': {
+                    '$lt': [
+                        '$_id', '$task2._id'
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1,
+                'length': {
+                    '$reduce': {
+                        'input': {
+                            '$range': [
+                                0, 377, 1
+                            ]
+                        },
+                        'initialValue': 0,
+                        'in': {
+                            '$sum': [
+                                '$$value', {
+                                    '$abs': {
+                                        '$strcasecmp': [
+                                            {
+                                                '$substr': [
+                                                    '$wild_fasta', '$$this', 1
+                                                ]
+                                            }, {
+                                                '$substr': [
+                                                    '$task2.wild_fasta', '$$this', 1
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }, {
+            '$group': {
+                '_id': '$length',
+                'count': {
+                    '$count': {}
+                }
+            }
+        }, {
+            '$sort': {
+                '_id': 1
+            }
+        }
+    ]))
 
 
 if __name__ == '__main__':

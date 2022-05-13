@@ -1,5 +1,5 @@
 import xlsxwriter
-from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly, calc_wild_type, calculate_formulas,distances_with_base, population_to_base_poly
+from queries import get_haplogroups, each_with_each, get_wild_type, wild_type_to_base_poly, calc_wild_type, calculate_formulas,distances_with_base,wild_each_with_each, population_to_base_poly
 import pymongo
 import os
 import time
@@ -9,12 +9,12 @@ tasks = [
   {"regions": [], "databases": ["Ukraine"], "name": "UKR", "number": 1},
          {"regions": ["ZA", "ST", "IF"], "databases": [], "name": "UKR_Karpatska", "number": 2},
          {"regions": ["KHM", "RO","CH","KHA","SU","ZH","BG"], "databases": [], "name": "UKR_Tsenralno_ukr", "number": 3},
-         # {"regions": ["BRST", "GML", "VTB"], "databases": [], "name": "BaltoSlavic-BEL", "number": 4},
-         # {"regions": ["PNG", "KSTR", "SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-All", "number": 5},
-         # {"regions": ["SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-South", "number": 6},
-         # {"regions": ["PNG", "KSTR"], "databases": [], "name": "BaltoSlavic-RUS-North", "number": 7},
-         # {"regions": ["PNG", "KSTR", "SML", "BLG", "BRST","GML","VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_all", "number": 12},
-         # {"regions": ["SML", "BLG", "BRST", "GML", "VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_south", "number": 13}
+         {"regions": ["BRST", "GML", "VTB"], "databases": [], "name": "BaltoSlavic-BEL", "number": 4},
+         {"regions": ["PNG", "KSTR", "SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-All", "number": 5},
+         {"regions": ["SML", "BLG"], "databases": [], "name": "BaltoSlavic-RUS-South", "number": 6},
+         {"regions": ["PNG", "KSTR"], "databases": [], "name": "BaltoSlavic-RUS-North", "number": 7},
+         {"regions": ["PNG", "KSTR", "SML", "BLG", "BRST","GML","VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_all", "number": 12},
+         {"regions": ["SML", "BLG", "BRST", "GML", "VTB"], "databases": ["Ukraine"], "name": "UKR_BEL_RUS_south", "number": 13}
          ]
 
 def print_formulas(worksheet, col, row, calculations):
@@ -183,8 +183,21 @@ def create_excel():
       worksheet.write(row + 1, col, haplo['count'])
       col += 1
 
+  wild_ewe = wild_each_with_each(db)
+  worksheet = workbook.add_worksheet("Дикі типи")
+  print(wild_ewe)
+  col = 0
+  row = 0
+  worksheet.write(row, col, "Відстань")
+  worksheet.write(row+1, col,"Попарний розподіл відносно усіх диких типів")
+  col += 1
+  for wild in wild_ewe:
+    worksheet.write(row, col, wild['_id'])
+    worksheet.write(row+1, col, wild['count'])
+    col += 1
 
 
+  client.close()
   workbook.close()
 
 
