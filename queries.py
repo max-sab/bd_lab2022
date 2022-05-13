@@ -478,7 +478,7 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
         "$or": [{"$in": ["$database", task['databases']]}, {"$in": ["$region_cypher", task['regions']]}]
     }
     find_by_2 = {
-        "$or": [{"$in": ["$$database", task['databases']]}, {"$in": ["$$region_cypher", task['regions']]}]
+        "$or": [{"$in": ["$fasta2.database", task['databases']]}, {"$in": ["$fasta2.region_cypher", task['regions']]}]
     }
 
     sequence = db['sequence']
@@ -491,33 +491,7 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
         {
             "$lookup": {
                 "from": "sequence",
-                "let": {
-                    "seq_id": "$_id",
-                    "fasta2": "$fasta",
-                    "region_cypher": "$region_cypher",
-                    "database": "$database"
-                },
                 "pipeline": [
-                    {
-                        "$match": {
-                            "$expr": find_by_2
-                        }
-                    },
-                    {
-                        "$match": {
-                            "$expr": {
-                                "$gt": [
-                                    "$$seq_id",
-                                    "$_id",
-                                ],
-                            }
-                        }
-                    },
-                    {
-                        "$project": {
-                            "fasta": 1,
-                        }
-                    },
                 ],
                 "as": "fasta2"
             }
@@ -533,6 +507,21 @@ def each_with_each(db: Database[Mapping[str, Any]], task):
         },
         {
             "$unwind": "$fasta2"
+        },
+        {
+            "$match": {
+                "$expr": find_by_2
+            }
+        },
+        {
+            "$match": {
+                "$expr": {
+                    "$lt": [
+                        "$_id",
+                        "$fasta2._id",
+                    ],
+                }
+            }
         },
         {
             "$project": {
