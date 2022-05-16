@@ -26,5 +26,10 @@ def read_fasta(file):
             "fasta": fasta_sequence[0].replace("\n", ""),
             "region_cypher": ''.join([i for i in region_cypher if not i.isdigit()])
         }
+        if final_dict[key]["region_cypher"] == "SMLS":
+            final_dict[key]["region_cypher"] = "SML"
+        if final_dict[key]["region_cypher"] == "KSTRG":
+            final_dict[key]["region_cypher"] = "KSTR"
+
 
     return final_dict
